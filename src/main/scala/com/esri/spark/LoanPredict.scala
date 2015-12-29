@@ -101,17 +101,18 @@ object LoanPredict {
                  
     var sc = new SparkContext(conf)
                
-  
     val loanFile = args(0)
     var loansRawRDD = sc.textFile(loanFile)
     
-    println(loansRawRDD.count)
-    var loansRDD = loansRawRDD.filter { line => !isHeader(line) }
+    //print sample data
+    var loansRDD = loansRawRDD.filter { line => !isHeader(line) }    
     loansRDD take(3) foreach println
 
+    //print headers  
     val headerAndRows = loansRawRDD.map { line => mLine(line) }
     val header = headerAndRows.first
-    header foreach println
+    //println(header)
+    //header foreach println
 
     loanStatusIndex = header.indexOf("LoanStatus")
     isEmployedIndex = header.indexOf("EmploymentStatus")
@@ -129,8 +130,10 @@ object LoanPredict {
     val safeParse = safe(parse)
     val labeledPoints = data.map(safeParse)
 
+    //cache data
     labeledPoints.cache()
 
+    //parse and filter invalid data
     val labeledPointsBad = labeledPoints.collect({
             case t if t.isRight => t.right.get
     })
@@ -138,6 +141,8 @@ object LoanPredict {
     val labeledPointsGood = labeledPoints.collect({
       case t if t.isLeft => t.left.get
     })
+    
+    //cache valid data points
     labeledPointsGood.cache()
 
     println("Number of valid input records " + labeledPointsGood.count)
@@ -160,12 +165,15 @@ object LoanPredict {
     val regParam = 0.1
     val regType = RegType.L2
     
-    val splits = labeledPointsGood.randomSplit(Array(0.8, 0.2))
+    val splits = labeledPointsGood.randomSplit(Array(0.8, 0.1,0.1))
     val training = splits(0).cache()
-    val test = splits(1).cache()
+    val validation = splits(1).cache()
+    val test = splits(2).cache()
+    
     val numTraining = training.count()
+    val numVal = validation.count()
     val numTest = test.count()
-    println(s"Training: $numTraining, test: $numTest.")
+    println(s"Training record count: $numTraining, validation record count:  $numVal , test record count: $numTest.")
 
     labeledPointsGood.unpersist(blocking = false)
 
@@ -174,29 +182,21 @@ object LoanPredict {
       case RegType.L2 => new SquaredL2Updater()
     }
     
-    /*
-     # Initialize variables using values from initial model training
-bestModel = None
-bestLogLoss = 1e10
-
-
-# In[75]:
-
-# TODO: Replace <FILL IN> with appropriate code
-stepSizes = [1, 10]
-regParams = [1e-6, 1e-3] 
-for stepSize in stepSizes:
-    for regParam in regParams:
-        model = (LogisticRegressionWithSGD
-                 .train(hashTrainData, numIters, stepSize, regParam=regParam, regType=regType,
-                        intercept=includeIntercept))
-        logLossVa = evaluateResults(model, hashValidationData)
-        print ('\tstepSize = {0:.1f}, regParam = {1:.0e}: logloss = {2:.3f}'
-               .format(stepSize, regParam, logLossVa))
-        if (logLossVa < bestLogLoss):
-            bestModel = model
-     
-     */
+    val model0 =  new LogisticRegressionWithLBFGS
+    model0.optimizer
+       .setNumIterations(50)       
+       .setUpdater(updater)
+       .setRegParam(1e-6)
+    val currentModel0 = model0.run(training).clearThreshold()
+    
+    val loglossTraining = evaluateModel(currentModel0, training)
+    println(f"Training logloss : $loglossTraining%.6f")
+   
+    val loglossValidation = evaluateModel(currentModel0, validation)
+    println(f"Validation logloss : $loglossValidation%.6f")
+    
+    
+    //perform grid search to find best model and hyper-parameters
     var bestLogLoss = 1e10
     var bestModel:LogisticRegressionModel = null;
     var currentModel:LogisticRegressionModel = null;    
@@ -211,8 +211,9 @@ for stepSize in stepSizes:
        .setNumIterations(numIterations)       
        .setUpdater(updater)
        .setRegParam(regParam)
+      
        currentModel = algorithm.run(training).clearThreshold()
-       loglossVal = evaluateModel(currentModel, training)
+       loglossVal = evaluateModel(currentModel, validation)
        println(f"Step size = $step, Regularization param = $regParam, Log Loss: $loglossVal%.6f ")   
        if (loglossVal < bestLogLoss){
           bestLogLoss = loglossVal      
@@ -220,68 +221,19 @@ for stepSize in stepSizes:
        }
       }
     }
-    println(f"Best training logloss $bestLogLoss%.6f")
+    println(f"Best validation logloss $bestLogLoss%.6f")
     
     val testLogloss = evaluateModel(bestModel, test)
     println(f"Best test logloss $testLogloss%.6f")
     
-    /*val model = algorithm.run(training).clearThreshold()
-    // training logloss
-    val loss = sc.accumulator(0.0, "LogLoss")
-       
-    //baseline prediction, always predict 1.0 irrespective of datapoint 
-    val TrainOneFrac = training.filter {
-              case LabeledPoint(label, features) =>  label == 1.0 
-            }.count/training.count.toFloat
-        
-    println("TrainOneFrac :" +  TrainOneFrac)    
-    val trainBaseLogLoss = training.map {
-                case LabeledPoint(label, features) =>             
-                  logloss(TrainOneFrac, label)              
-                }.sum/training.count.toFloat
-     
-    println("Baseline training logloss: " + trainBaseLogLoss)
-                
-     val trainLogLoss = training.map {
-                case LabeledPoint(label, features) =>             
-                  logloss(model.predict(features), label)              
-                }.sum/training.count.toFloat
-     
-    println("Training logloss: " + trainLogLoss)
-   
-    val TestOneFrac = test.filter {
-                  case LabeledPoint(label, features) => label == 1.0
-                }.count/test.count.toFloat
-    println("TestOneFrac :" +  TrainOneFrac)          
-                
-    val testBaseLogLoss = test.map {  
-                  case LabeledPoint(label, features) => 
-                    logloss(TestOneFrac, label)
-                }.sum/test.count.toFloat
-                
-    //testPredictionAndLabel.take(100).foreach(println) 
-    println("Test Base logloss: " + testBaseLogLoss)
-                
-    val testLogLoss = test.map {  
-                  case LabeledPoint(label, features) => 
-                    logloss(model.predict(features), label)
-                }.sum/test.count.toFloat
-                
-    //testPredictionAndLabel.take(100).foreach(println) 
-    println("Test logloss: " + testLogLoss)
-                                
-    val prediction = model.predict(test.map(_.features))
-      
+    val prediction = bestModel.predict(test.map(_.features))     
     val predictionAndLabel = prediction.zip(test.map(_.label))
-
     val metrics = new BinaryClassificationMetrics(predictionAndLabel)
-
     println(s"Test areaUnderPR = ${metrics.areaUnderPR()}.")
 
     println("Model Weights:")
-    model.weights.toArray.foreach { weight => println("  " + weight) }
-    // the highest weight is given to the debt-income ratio
-		*/
+    bestModel.weights.toArray.foreach { weight => println("  " + weight) }
+  
     sc.stop()
   }
 }
