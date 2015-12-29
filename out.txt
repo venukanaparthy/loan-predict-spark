@@ -1,88 +1,6 @@
-113938
 "1021339766868145413AB3B","193129","2007-08-26 19:09:29.263000000","C","36","Completed","2009-08-14 00:00:00",".165160",".158000",".138000","","","","","","","0","CO","Other","Self-employed","2","True","True","","2007-08-26 18:41:46.780000000","640","659","2001-10-11 00:00:00","5","4","12","1","24.000000","3","3.000000","2","472.000000","4","0","0",".000000",".000000","1500.000000","11.000000",".810000",".000000",".170000","$25,000-49,999","True","3083.333333","E33A3400205839220442E84","","","","","","","","","0","","78","19141","9425","2007-09-12 00:00:00","Q3 2007","1F3E3376408759268057EDA","330.430000","11396.140000","9425.000000","1971.140000","-133.180000",".000000",".000000",".000000",".000000","1.000000","0","0",".000000","258"
 "10273602499503308B223C1","1209647","2014-02-27 08:28:07.900000000","","36","Current","",".120160",".092000",".082000",".079600",".024900",".054700","6","A","7.000000","2","CO","Professional","Employed","44","False","False","","2014-02-27 08:28:14","680","699","1996-03-18 00:00:00","14","14","29","13","389.000000","3","5.000000","0",".000000","0","1","0","3989.000000",".210000","10266.000000","29.000000","1.000000","2.000000",".180000","$50,000-74,999","True","6125.000000","9E3B37071505919926B1D82","","","","","","","","","0","","0","134815","10000","2014-03-03 00:00:00","Q1 2014","1D13370546739025387B2F4","318.930000",".000000",".000000",".000000",".000000",".000000",".000000",".000000",".000000","1.000000","0","0",".000000","1"
 "0EE9337825851032864889A","81716","2007-01-05 15:00:47.090000000","HR","36","Completed","2009-12-17 00:00:00",".282690",".275000",".240000","","","","","","","0","GA","Other","Not available","","False","True","783C3371218786870A73D20","2007-01-02 14:09:10.060000000","480","499","2002-07-27 00:00:00","","","3","0",".000000","0","1.000000","1","","0","0","","","","","","","",".060000","Not displayed","True","2083.333333","6954337960046817851BCB2","","","","","","","","","0","","86","6466","3001","2007-01-17 00:00:00","Q1 2007","5F7033715035555618FA612","123.320000","4186.630000","3001.000000","1185.630000","-24.200000",".000000",".000000",".000000",".000000","1.000000","0","0",".000000","41"
-ListingKey
-ListingNumber
-ListingCreationDate
-CreditGrade
-Term
-LoanStatus
-ClosedDate
-BorrowerAPR
-BorrowerRate
-LenderYield
-EstimatedEffectiveYield
-EstimatedLoss
-EstimatedReturn
-ProsperRating (numeric)
-ProsperRating (Alpha)
-ProsperScore
-ListingCategory (numeric)
-BorrowerState
-Occupation
-EmploymentStatus
-EmploymentStatusDuration
-IsBorrowerHomeowner
-CurrentlyInGroup
-GroupKey
-DateCreditPulled
-CreditScoreRangeLower
-CreditScoreRangeUpper
-FirstRecordedCreditLine
-CurrentCreditLines
-OpenCreditLines
-TotalCreditLinespast7years
-OpenRevolvingAccounts
-OpenRevolvingMonthlyPayment
-InquiriesLast6Months
-TotalInquiries
-CurrentDelinquencies
-AmountDelinquent
-DelinquenciesLast7Years
-PublicRecordsLast10Years
-PublicRecordsLast12Months
-RevolvingCreditBalance
-BankcardUtilization
-AvailableBankcardCredit
-TotalTrades
-TradesNeverDelinquent (percentage)
-TradesOpenedLast6Months
-DebtToIncomeRatio
-IncomeRange
-IncomeVerifiable
-StatedMonthlyIncome
-LoanKey
-TotalProsperLoans
-TotalProsperPaymentsBilled
-OnTimeProsperPayments
-ProsperPaymentsLessThanOneMonthLate
-ProsperPaymentsOneMonthPlusLate
-ProsperPrincipalBorrowed
-ProsperPrincipalOutstanding
-ScorexChangeAtTimeOfListing
-LoanCurrentDaysDelinquent
-LoanFirstDefaultedCycleNumber
-LoanMonthsSinceOrigination
-LoanNumber
-LoanOriginalAmount
-LoanOriginationDate
-LoanOriginationQuarter
-MemberKey
-MonthlyLoanPayment
-LP_CustomerPayments
-LP_CustomerPrincipalPayments
-LP_InterestandFees
-LP_ServiceFees
-LP_CollectionFees
-LP_GrossPrincipalLoss
-LP_NetPrincipalLoss
-LP_NonPrincipalRecoverypayments
-PercentFunded
-Recommendations
-InvestmentFromFriendsCount
-InvestmentFromFriendsAmount
-Investors
 Number of valid input records 97888
 Typical input record:
   Good/Bad status Good
@@ -96,14 +14,28 @@ Typical input record:
   StatedMonthlyIncome 3083.333333
   IncomeToAmountRatio 0.3271441202122016
   DebtToIncomeRatio 0.17
-Training: 78194, test: 19694.
+Training record count: 78106, validation record count:  9858 , test record count: 9924.
+Training logloss : 0.376423
+Validation logloss : 0.391204
 Step : 1
-Step size = 1, Regularization param = 1.0E-6, Log Loss: 0.380064 
+Step size = 1, Regularization param = 1.0E-6, Log Loss: 0.391204 
 Step : 1
-Step size = 1, Regularization param = 0.001, Log Loss: 0.380069 
+Step size = 1, Regularization param = 0.001, Log Loss: 0.391224 
 Step : 10
-Step size = 10, Regularization param = 1.0E-6, Log Loss: 0.380064 
+Step size = 10, Regularization param = 1.0E-6, Log Loss: 0.391204 
 Step : 10
-Step size = 10, Regularization param = 0.001, Log Loss: 0.380069 
-Best training logloss 0.380064
-Best test logloss 0.374874
+Step size = 10, Regularization param = 0.001, Log Loss: 0.391224 
+Best validation logloss 0.391204
+Best test logloss 0.387349
+Test areaUnderPR = 0.9238842498768925.
+Model Weights:
+  -0.10568327453242753
+  1.2401241516782586
+  6.166026955242146E-4
+  1.5233495128583352E-5
+  -5.8726585806088505E-6
+  -0.01042426949290824
+  0.001308852223800544
+  2.6367198664683534E-5
+  0.04116503973691116
+  -0.14865797096782304
