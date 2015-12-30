@@ -14,7 +14,8 @@ import org.apache.spark.mllib.optimization.{L1Updater, SquaredL2Updater}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.linalg.SparseVector
 import scala.math.{abs, max, min, log}
-
+import scalax.chart.module.Charting.XYLineChart
+import scala.collection.immutable.IndexedSeq
 
 object LoanPredict {
 
@@ -106,6 +107,8 @@ object LoanPredict {
     
     //print sample data
     var loansRDD = loansRawRDD.filter { line => !isHeader(line) }    
+    
+    println("sample data: ")
     loansRDD take(3) foreach println
 
     //print headers  
@@ -161,9 +164,9 @@ object LoanPredict {
     println("  IncomeToAmountRatio " + firstFeatureVector(8))
     println("  DebtToIncomeRatio " + firstFeatureVector(9))
 
-    val numIterations = 100
-    val regParam = 0.1
-    val regType = RegType.L2
+    
+    //print labeled data
+    labeledPointsGood.take(3).foreach(println)
     
     val splits = labeledPointsGood.randomSplit(Array(0.8, 0.1,0.1))
     val training = splits(0).cache()
@@ -175,13 +178,21 @@ object LoanPredict {
     val numTest = test.count()
     println(s"Training record count: $numTraining, validation record count:  $numVal , test record count: $numTest.")
 
+    //unpersit - not needed anymore
+    labeledPoints.unpersist(blocking = false)    
     labeledPointsGood.unpersist(blocking = false)
 
+    //model params
+    val numIterations = 100
+    val regParam = 0.1
+    val regType = RegType.L2
+    
     val updater = regType match {
       case RegType.L1 => new L1Updater()
       case RegType.L2 => new SquaredL2Updater()
     }
     
+    //base logistic regression model
     val model0 =  new LogisticRegressionWithLBFGS
     model0.optimizer
        .setNumIterations(50)       
@@ -226,14 +237,68 @@ object LoanPredict {
     val testLogloss = evaluateModel(bestModel, test)
     println(f"Best test logloss $testLogloss%.6f")
     
+    /*val model = algorithm.run(training).clearThreshold()
+    // training logloss
+    val loss = sc.accumulator(0.0, "LogLoss")
+       
+    //baseline prediction, always predict 1.0 irrespective of datapoint 
+    val TrainOneFrac = training.filter {
+              case LabeledPoint(label, features) =>  label == 1.0 
+            }.count/training.count.toFloat
+        
+    println("TrainOneFrac :" +  TrainOneFrac)    
+    val trainBaseLogLoss = training.map {
+                case LabeledPoint(label, features) =>             
+                  logloss(TrainOneFrac, label)              
+                }.sum/training.count.toFloat
+     
+    println("Baseline training logloss: " + trainBaseLogLoss)
+                
+     val trainLogLoss = training.map {
+                case LabeledPoint(label, features) =>             
+                  logloss(model.predict(features), label)              
+                }.sum/training.count.toFloat
+     
+    println("Training logloss: " + trainLogLoss)
+   
+    val TestOneFrac = test.filter {
+                  case LabeledPoint(label, features) => label == 1.0
+                }.count/test.count.toFloat
+    println("TestOneFrac :" +  TrainOneFrac)          
+                
+    val testBaseLogLoss = test.map {  
+                  case LabeledPoint(label, features) => 
+                    logloss(TestOneFrac, label)
+                }.sum/test.count.toFloat
+                
+    //testPredictionAndLabel.take(100).foreach(println) 
+    println("Test Base logloss: " + testBaseLogLoss)
+                
+    val testLogLoss = test.map {  
+                  case LabeledPoint(label, features) => 
+                    logloss(model.predict(features), label)
+                }.sum/test.count.toFloat
+                
+    //testPredictionAndLabel.take(100).foreach(println) 
+    println("Test logloss: " + testLogLoss)
+   */                             
     val prediction = bestModel.predict(test.map(_.features))     
     val predictionAndLabel = prediction.zip(test.map(_.label))
-    val metrics = new BinaryClassificationMetrics(predictionAndLabel)
-    println(s"Test areaUnderPR = ${metrics.areaUnderPR()}.")
-
+    
     println("Model Weights:")
     bestModel.weights.toArray.foreach { weight => println("  " + weight) }
-  
+      
+    val metrics = new BinaryClassificationMetrics(predictionAndLabel)
+    println(s"Test areaUnderPR = ${metrics.areaUnderPR()}.")
+    
+    //get the false-positives and true positives
+    val rocRDDD = metrics.roc()  
+    val rocArr = rocRDDD.collect.toVector
+
+    //plot the basic ROC curve.
+    val chart = XYLineChart(rocArr)
+    chart.show("Roc Curve", (1920, 1080), false)
+
     sc.stop()
   }
 }

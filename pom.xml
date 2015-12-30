@@ -73,8 +73,12 @@
 		<groupId>org.apache.spark</groupId>
 		<artifactId>spark-mllib_2.10</artifactId>
 		<version>1.5.2</version>
-	</dependency>
-		
+	</dependency>		
+	<dependency>
+		<groupId>com.github.wookietreiber</groupId>
+		<artifactId>scala-chart_2.10</artifactId>
+		<version>0.5.0</version>
+	</dependency>	
   </dependencies>
   
   <build>
